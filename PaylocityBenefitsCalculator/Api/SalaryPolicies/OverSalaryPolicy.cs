@@ -24,7 +24,7 @@ public class OverSalaryPolicy : ISalaryPolicy
             return value / Constants.NumberOfDaysInLeapYear;
         }
 
-        return value / Constants.NumberOfMonthsInYear;
+        return value / Constants.NumberOfDaysInYear;
     }
 
 }
