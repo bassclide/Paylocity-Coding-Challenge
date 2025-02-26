@@ -1,11 +1,27 @@
-﻿namespace Api.Models;
+﻿using Api.Errors;
+using Api.Shared;
 
-public class Employee
+namespace Api.Models;
+
+public sealed class Employee
 {
-    public int Id { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public decimal Salary { get; set; }
-    public DateTime DateOfBirth { get; set; }
-    public ICollection<Dependent> Dependents { get; set; } = new List<Dependent>();
+    public int Id { get; init; }
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
+    public decimal Salary { get; init; }
+    public DateTime DateOfBirth { get; init; }
+    public ICollection<Dependent> Dependents { get; init; } = new List<Dependent>();
+
+    public Res AddDependent(Dependent dependent)
+    {
+        if (Dependents.Any(d =>
+                d.Relationship is Relationship.Spouse or Relationship.DomesticPartner) &&
+            dependent.Relationship is Relationship.DomesticPartner or Relationship.Spouse)
+        {
+            return Res.Failure(new EmployeeAlreadyHasDependantWithRelationship());
+        }
+
+        Dependents.Add(dependent);
+        return Res.Success();
+    }
 }
