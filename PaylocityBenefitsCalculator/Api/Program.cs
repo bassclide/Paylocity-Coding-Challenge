@@ -1,3 +1,7 @@
+using Api.Repositories;
+using Api.SalaryPolicies;
+using Api.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +29,27 @@ builder.Services.AddCors(options =>
         policy => { policy.WithOrigins("http://localhost:3000", "http://localhost"); });
 });
 
+builder.Services.AddTransient<IEmployeesService, EmployeesService>();
+builder.Services.AddTransient<IDependentService, DependentsService>();
+builder.Services.AddTransient<IPaycheckService, PaycheckService>();
+
+//salary policies
+builder.Services.AddSingleton<ISalaryPolicy, BaseCostPolicy>();
+builder.Services.AddSingleton<ISalaryPolicy, DependentsPolicy>();
+builder.Services.AddSingleton<ISalaryPolicy, ElderlyDependentsPolicy>();
+builder.Services.AddSingleton<ISalaryPolicy, OverSalaryPolicy>();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("DataSource=test-sqlite.db"));
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.OpenConnection();
+    context.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -43,3 +67,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// needed for WebApplicationFactory
+public partial class Program { }
